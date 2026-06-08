@@ -802,12 +802,17 @@ class Model(metaclass=ModelBase):
         """Save all the parents of cls using values from self."""
         meta = cls._meta
         inserted = False
+        pk_val = self._get_pk_val(meta)
         for parent, field in meta.parents.items():
             # Make sure the link fields are synced between parent and self.
-            if (self._state.adding and field and
-                    getattr(self, parent._meta.pk.attname) is None and
-                    getattr(self, field.attname) is not None):
-                setattr(self, parent._meta.pk.attname, getattr(self, field.attname))
+            if field:
+                if pk_val is None:
+                    setattr(self, parent._meta.pk.attname, None)
+                    setattr(self, field.attname, None)
+                elif (self._state.adding and
+                        getattr(self, parent._meta.pk.attname) is None and
+                        getattr(self, field.attname) is not None):
+                    setattr(self, parent._meta.pk.attname, getattr(self, field.attname))
             parent_inserted = self._save_parents(cls=parent, using=using, update_fields=update_fields)
             updated = self._save_table(
                 cls=parent, using=using, update_fields=update_fields,
