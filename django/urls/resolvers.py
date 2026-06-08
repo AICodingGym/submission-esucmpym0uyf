@@ -31,6 +31,10 @@ from .utils import get_callable
 
 class ResolverMatch:
     def __init__(self, func, args, kwargs, url_name=None, app_names=None, namespaces=None, route=None, tried=None):
+        while isinstance(func, functools.partial):
+            args = func.args + args
+            kwargs = {**(func.keywords or {}), **kwargs}
+            func = func.func
         self.func = func
         self.args = args
         self.kwargs = kwargs
