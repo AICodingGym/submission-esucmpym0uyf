@@ -31,10 +31,6 @@ from .utils import get_callable
 
 class ResolverMatch:
     def __init__(self, func, args, kwargs, url_name=None, app_names=None, namespaces=None, route=None, tried=None):
-        while isinstance(func, functools.partial):
-            args = func.args + args
-            kwargs = {**(func.keywords or {}), **kwargs}
-            func = func.func
         self.func = func
         self.args = args
         self.kwargs = kwargs
@@ -49,7 +45,9 @@ class ResolverMatch:
         self.namespaces = [x for x in namespaces if x] if namespaces else []
         self.namespace = ':'.join(self.namespaces)
 
-        if not hasattr(func, '__name__'):
+        if isinstance(func, functools.partial):
+            self._func_path = repr(func)
+        elif not hasattr(func, '__name__'):
             # A class-based view
             self._func_path = func.__class__.__module__ + '.' + func.__class__.__name__
         else:
@@ -63,7 +61,7 @@ class ResolverMatch:
         return (self.func, self.args, self.kwargs)[index]
 
     def __repr__(self):
-        return "ResolverMatch(func=%s, args=%s, kwargs=%s, url_name=%s, app_names=%s, namespaces=%s, route=%s)" % (
+        return "ResolverMatch(func=%s, args=%r, kwargs=%r, url_name=%r, app_names=%r, namespaces=%r, route=%r)" % (
             self._func_path, self.args, self.kwargs, self.url_name,
             self.app_names, self.namespaces, self.route,
         )
